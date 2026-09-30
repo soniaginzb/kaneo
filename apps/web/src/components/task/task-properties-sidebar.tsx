@@ -45,6 +45,7 @@ import TaskDueDatePopover from "./task-due-date-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
+import TaskRepeatButton from "./task-repeat-button";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
 
@@ -333,6 +334,7 @@ export default function TaskPropertiesSidebar({
                   </Button>
                 </TaskDueDatePopover>
               )}
+              {task && <TaskRepeatButton task={task} />}
             </div>
           </div>
         )}
@@ -526,6 +528,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskRepeatButton task={task} />}
               </div>
             </div>
 
@@ -721,6 +724,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskRepeatButton task={task} />}
               </div>
             </div>
           </>

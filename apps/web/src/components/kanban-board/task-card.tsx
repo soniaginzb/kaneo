@@ -6,6 +6,7 @@ import {
   Calendar,
   CalendarClock,
   CalendarX,
+  Repeat,
   SlidersHorizontal,
 } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/preview-card";
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useGetCustomFieldValuesByProject from "@/hooks/queries/custom-field/use-get-custom-field-values-by-project";
+import useProjectRecurringTaskIds from "@/hooks/queries/task-recurrence/use-project-recurring-task-ids";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import {
@@ -65,6 +67,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
   } = useSortable({ id: task.id, disabled: disableDragDrop });
   const { project } = useProjectStore();
   const taskIsCompleted = isTaskCompleted(task.status, project?.columns);
+  const recurringTaskIds = useProjectRecurringTaskIds(task.projectId);
   const { data: workspace } = useActiveWorkspace();
   const { mutateAsync: deleteTask } = useDeleteTask();
   const navigate = useNavigate();
@@ -335,6 +338,18 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                     getDueDateStatus(task.dueDate, taskIsCompleted) ===
                       "no-due-date") && <Calendar className="w-3 h-3" />}
                   <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                </div>
+              )}
+
+              {recurringTaskIds?.has(task.id) && (
+                <div
+                  className="flex items-center rounded h-5.5 px-1.5 text-muted-foreground"
+                  title={t("tasks:repeat.repeating")}
+                >
+                  <Repeat
+                    className="w-3 h-3"
+                    aria-label={t("tasks:repeat.repeating")}
+                  />
                 </div>
               )}
 

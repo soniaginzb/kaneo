@@ -272,6 +272,12 @@ export function useProjectWebSocket(projectId: string) {
             );
             return;
           }
+          if (message.type === "TASK_CREATED") {
+            // A completed repeating task hands its rule to the new copy.
+            void queryClient.invalidateQueries({
+              queryKey: ["task-recurrence", "project", projectId],
+            });
+          }
           if (
             message.type === "TASK_UPDATED" ||
             message.type === "TASK_CREATED" ||

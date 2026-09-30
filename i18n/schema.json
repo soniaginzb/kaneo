@@ -10729,6 +10729,172 @@
 				},
 				"descriptionLoadError": {
 					"type": "string"
+				},
+				"board": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"reorderFailed": {
+							"type": "string"
+						}
+					},
+					"required": ["reorderFailed"]
+				},
+				"repeat": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"none": {
+							"type": "string"
+						},
+						"repeating": {
+							"type": "string"
+						},
+						"frequency": {
+							"type": "string"
+						},
+						"daily": {
+							"type": "string"
+						},
+						"weekly": {
+							"type": "string"
+						},
+						"monthly": {
+							"type": "string"
+						},
+						"yearly": {
+							"type": "string"
+						},
+						"every": {
+							"type": "string"
+						},
+						"unitDays": {
+							"type": "string"
+						},
+						"unitWeeks": {
+							"type": "string"
+						},
+						"unitMonths": {
+							"type": "string"
+						},
+						"unitYears": {
+							"type": "string"
+						},
+						"on": {
+							"type": "string"
+						},
+						"onDay": {
+							"type": "string"
+						},
+						"onWeekday": {
+							"type": "string"
+						},
+						"ordinal1": {
+							"type": "string"
+						},
+						"ordinal2": {
+							"type": "string"
+						},
+						"ordinal3": {
+							"type": "string"
+						},
+						"ordinal4": {
+							"type": "string"
+						},
+						"ordinalLast": {
+							"type": "string"
+						},
+						"next": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						},
+						"stop": {
+							"type": "string"
+						},
+						"saveSuccess": {
+							"type": "string"
+						},
+						"saveError": {
+							"type": "string"
+						},
+						"stopSuccess": {
+							"type": "string"
+						},
+						"summaryDaily": {
+							"type": "string"
+						},
+						"summaryEveryDays": {
+							"type": "string"
+						},
+						"summaryWeekly": {
+							"type": "string"
+						},
+						"summaryEveryWeeks": {
+							"type": "string"
+						},
+						"summaryMonthly": {
+							"type": "string"
+						},
+						"summaryEveryMonths": {
+							"type": "string"
+						},
+						"summaryYearly": {
+							"type": "string"
+						},
+						"summaryEveryYears": {
+							"type": "string"
+						},
+						"whenDay": {
+							"type": "string"
+						},
+						"whenLastDay": {
+							"type": "string"
+						},
+						"whenWeekday": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"none",
+						"repeating",
+						"frequency",
+						"daily",
+						"weekly",
+						"monthly",
+						"yearly",
+						"every",
+						"unitDays",
+						"unitWeeks",
+						"unitMonths",
+						"unitYears",
+						"on",
+						"onDay",
+						"onWeekday",
+						"ordinal1",
+						"ordinal2",
+						"ordinal3",
+						"ordinal4",
+						"ordinalLast",
+						"next",
+						"save",
+						"stop",
+						"saveSuccess",
+						"saveError",
+						"stopSuccess",
+						"summaryDaily",
+						"summaryEveryDays",
+						"summaryWeekly",
+						"summaryEveryWeeks",
+						"summaryMonthly",
+						"summaryEveryMonths",
+						"summaryYearly",
+						"summaryEveryYears",
+						"whenDay",
+						"whenLastDay",
+						"whenWeekday"
+					]
 				}
 			},
 			"required": [
@@ -10770,7 +10936,9 @@
 				"descriptionSearchError",
 				"descriptionRetry",
 				"descriptionLoading",
-				"descriptionLoadError"
+				"descriptionLoadError",
+				"board",
+				"repeat"
 			]
 		},
 		"invitations": {
