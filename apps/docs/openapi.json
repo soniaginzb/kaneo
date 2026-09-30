@@ -3406,6 +3406,70 @@
           "createdAt"
         ]
       },
+      "TaskRecurrenceResult": {
+        "type": "object",
+        "properties": {
+          "recurrence": {
+            "$ref": "#/components/schemas/TaskRecurrence"
+          }
+        },
+        "required": [
+          "recurrence"
+        ]
+      },
+      "TaskRecurrence": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "taskId": {
+            "type": "string"
+          },
+          "rrule": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "nextDueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the next copy would be due if the task were completed now."
+          }
+        },
+        "required": [
+          "taskId",
+          "rrule",
+          "timeZone",
+          "nextDueDate"
+        ]
+      },
+      "DeletedTaskRecurrence": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "RecurringTaskIds": {
+        "type": "object",
+        "properties": {
+          "taskIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "taskIds"
+        ]
+      },
       "CreatedExternalLink": {
         "type": "object",
         "properties": {
@@ -16392,6 +16456,230 @@
           },
           "404": {
             "description": "Task relation not found, or its source task is gone",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-recurrence/{taskId}": {
+      "get": {
+        "operationId": "getTaskRecurrence",
+        "tags": [
+          "Task Recurrence"
+        ],
+        "summary": "Get task recurrence",
+        "description": "Get the task's repeat rule and the next due date it would produce, or null if the task does not repeat.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task's repeat rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRecurrenceResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No access to the task's workspace",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setTaskRecurrence",
+        "tags": [
+          "Task Recurrence"
+        ],
+        "summary": "Set task recurrence",
+        "description": "Create or replace the task's repeat rule. When the task is completed, a copy with the next due date is created and the rule moves to it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rrule": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "RFC 5545 RRULE body, e.g. FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TH. Supported: DAILY; WEEKLY with BYDAY; MONTHLY with BYMONTHDAY (1-31 or -1) or one ordinal BYDAY (1MO-4SU, -1FR); YEARLY with BYMONTH and BYMONTHDAY; INTERVAL 1-365. Days past a month's end clamp to its last day."
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "description": "IANA time zone the rule is evaluated in, e.g. Europe/London."
+                  }
+                },
+                "required": [
+                  "rrule",
+                  "timeZone"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The saved repeat rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRecurrence"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported rule or unknown time zone",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing task:update permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTaskRecurrence",
+        "tags": [
+          "Task Recurrence"
+        ],
+        "summary": "Stop task recurrence",
+        "description": "Remove the task's repeat rule. The task itself is unchanged.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "taskId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether a rule was removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedTaskRecurrence"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing task:update permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-recurrence/project/{projectId}": {
+      "get": {
+        "operationId": "getProjectRecurringTaskIds",
+        "tags": [
+          "Task Recurrence"
+        ],
+        "summary": "List recurring tasks in a project",
+        "description": "IDs of the project's tasks that have a repeat rule, for board indicators.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurring task IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringTaskIds"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No access to the project's workspace",
             "content": {
               "text/plain": {
                 "schema": {
