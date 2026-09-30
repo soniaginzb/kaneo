@@ -24,6 +24,22 @@ import {
 import { claimTaskNumber } from "./claim-task-numbers";
 import { nextTaskPosition } from "./next-task-position";
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+export type DuplicateTaskOverrides = {
+  status?: string;
+  dueDate?: Date | null;
+  startDate?: Date | null;
+  userId?: string | null;
+  // Replaces the copied parent links, e.g. to hang a copied subtask under a copied parent.
+  parents?: { taskId: string; projectId: string }[];
+  // Runs inside the copy's transaction; throwing rolls the copy back.
+  inTransaction?: (
+    tx: Transaction,
+    task: typeof taskTable.$inferSelect,
+  ) => Promise<void>;
+};
+
 async function discardCopiedObjects(objectKeys: string[]) {
   await Promise.all(
     objectKeys.map((objectKey) =>
@@ -121,11 +137,13 @@ async function duplicateTask({
   currentUserId,
   canUpdateTasks,
   title,
+  overrides = {},
 }: {
   taskId: string;
   currentUserId: string;
   canUpdateTasks: boolean;
   title?: string;
+  overrides?: DuplicateTaskOverrides;
 }) {
   const sourceTask = await db.query.taskTable.findFirst({
     where: eq(taskTable.id, taskId),
@@ -149,13 +167,16 @@ async function duplicateTask({
     });
   }
 
-  await assertValidTaskStatus(sourceTask.status, sourceTask.projectId);
-  if (sourceTask.userId)
-    await assertAssignableUser(sourceTask.userId, project.workspaceId);
+  const status = overrides.status ?? sourceTask.status;
+  const assigneeId =
+    overrides.userId !== undefined ? overrides.userId : sourceTask.userId;
+
+  await assertValidTaskStatus(status, sourceTask.projectId);
+  if (assigneeId) await assertAssignableUser(assigneeId, project.workspaceId);
   const column = await db.query.columnTable.findFirst({
     where: and(
       eq(columnTable.projectId, sourceTask.projectId),
-      eq(columnTable.slug, sourceTask.status),
+      eq(columnTable.slug, status),
     ),
   });
 
@@ -216,22 +237,28 @@ async function duplicateTask({
 
   // A duplicated subtask stays a subtask of the same parents. The source's own
   // subtasks are not duplicated: a copy is one task, not a tree.
-  const parentRelations = await db
-    .select({
-      parentTaskId: taskRelationTable.sourceTaskId,
-      parentProjectId: taskTable.projectId,
-      relationType: taskRelationTable.relationType,
-    })
-    .from(taskRelationTable)
-    .innerJoin(taskTable, eq(taskRelationTable.sourceTaskId, taskTable.id))
-    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(
-      and(
-        eq(taskRelationTable.targetTaskId, sourceTask.id),
-        eq(projectTable.workspaceId, project.workspaceId),
-        eq(taskRelationTable.relationType, "subtask"),
-      ),
-    );
+  const parentRelations = overrides.parents
+    ? overrides.parents.map((parent) => ({
+        parentTaskId: parent.taskId,
+        parentProjectId: parent.projectId,
+        relationType: "subtask",
+      }))
+    : await db
+        .select({
+          parentTaskId: taskRelationTable.sourceTaskId,
+          parentProjectId: taskTable.projectId,
+          relationType: taskRelationTable.relationType,
+        })
+        .from(taskRelationTable)
+        .innerJoin(taskTable, eq(taskRelationTable.sourceTaskId, taskTable.id))
+        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+        .where(
+          and(
+            eq(taskRelationTable.targetTaskId, sourceTask.id),
+            eq(projectTable.workspaceId, project.workspaceId),
+            eq(taskRelationTable.relationType, "subtask"),
+          ),
+        );
 
   if (parentRelations.length > 0 && !canUpdateTasks) {
     throw new HTTPException(403, {
@@ -260,7 +287,7 @@ async function duplicateTask({
       const nextPosition = await nextTaskPosition(
         tx,
         sourceTask.projectId,
-        sourceTask.status,
+        status,
         column?.id ?? null,
       );
 
@@ -269,12 +296,18 @@ async function duplicateTask({
         .values({
           id: duplicatedTaskId,
           projectId: sourceTask.projectId,
-          userId: sourceTask.userId,
+          userId: assigneeId,
           title: title?.trim() || sourceTask.title,
-          status: sourceTask.status,
+          status,
           columnId: column?.id ?? null,
-          startDate: sourceTask.startDate,
-          dueDate: sourceTask.dueDate,
+          startDate:
+            overrides.startDate !== undefined
+              ? overrides.startDate
+              : sourceTask.startDate,
+          dueDate:
+            overrides.dueDate !== undefined
+              ? overrides.dueDate
+              : sourceTask.dueDate,
           description,
           priority: sourceTask.priority,
           number: taskNumber,
@@ -322,6 +355,8 @@ async function duplicateTask({
               )
               .returning()
           : [];
+
+      await overrides.inTransaction?.(tx, task);
 
       return { task, relations };
     });
