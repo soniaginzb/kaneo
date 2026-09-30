@@ -1,7 +1,7 @@
 # Recurring Tasks for self-hosted Kaneo — Design
 
 Date: 2026-10-01
-Status: Draft, awaiting review
+Status: Approved 2026-10-01 (revised during planning: in-house date math, duplicateTask overrides, project-level icon list)
 Fork: github.com/soniaginzb/kaneo (public), branch recurring-tasks
 Upstream base: usekaneo/kaneo @ e25f53a (2026-09-30)
 
@@ -54,12 +54,12 @@ Migration: one new Drizzle migration generated with drizzle-kit, applied automat
 | File | Responsibility |
 |---|---|
 | `schema.ts` | Zod/OpenAPI schemas for the rule payload and allowed RRULE subset. |
-| `next-occurrence.ts` | Pure function: `(rrule, timeZone, previousDue \| null, completedAt, now) → { dueDate, startDate? }`. Uses the `rrule` package on local wall-clock dates, then converts back to UTC. No DB access. |
+| `next-occurrence.ts` | Pure function: `(rule, timeZone, previousDue \| null, completedAt, now) → dueDate`. Works on local wall-clock calendar dates, then converts back to UTC. No DB access. Uses small in-house calendar helpers rather than the `rrule` package: RFC 5545 skips months that lack BYMONTHDAY ("31st" would skip Feb/Apr/Jun…), whereas this feature clamps to the month's last day like Asana. Day 29 Feb yearly clamps to 28 Feb in non-leap years. |
 | `spawn-next-occurrence.ts` | Given a completed task ID: in one transaction, lock the rule row, confirm it still belongs to that task, create the copy (reusing the duplicate-task field-copy logic), copy subtasks, move the rule to the new task. |
 | `subscriber.ts` | Subscribes to `task.status_changed`. If the new status is a final column and the task has a rule, calls `spawnNextOccurrence`. Catches and logs errors. This event is published by every status path (sidebar, board drag via `reorder-tasks`, `bulk-update-tasks`, `update-task`, and the GitHub/GitLab/Gitea integrations), so all of them trigger recurrence. `move-task` (moving to another project) does not and is not a completion. |
-| `controllers/` + `index.ts` | Routes: `GET /task-recurrence/:taskId`, `PUT /task-recurrence/:taskId` (create/replace), `DELETE /task-recurrence/:taskId`. Same auth and `task:update` permission checks as other task routes. |
+| `controllers/` + `index.ts` | Routes: `GET /task-recurrence/{taskId}`, `PUT /task-recurrence/{taskId}` (create/replace), `DELETE /task-recurrence/{taskId}`, `GET /task-recurrence/project/{projectId}` (recurring task IDs for the board icon). Same workspace access, `task:update` permission and entitlement checks as other task routes. |
 
-Copy logic: `duplicate-task.ts` already copies title, description, priority, assignee, labels, custom fields and parent links. Extract its copy step into a reusable helper rather than calling the HTTP-level controller, so recurrence can pass the new due/start dates and first-column status. Subtask copies are created in their own project's first column and linked to the new parent with a `subtask` relation.
+Copy logic: `duplicate-task.ts` already copies title, description (with its attachments), priority, assignee, labels, custom fields and parent links. Give `duplicateTask` an optional `overrides` argument (status, dueDate, startDate, userId, replacement parents, and an `inTransaction` hook) so recurrence reuses it unchanged for the normal Duplicate button. The rule move runs in the `inTransaction` hook, inside the same transaction as the copy. Subtask copies are made after that transaction commits, each with its own duplicate call; a failed subtask copy is logged and does not undo the parent copy. Subtask dates shift by the same amount as the parent's due date; if the parent had no due date, subtask dates are cleared. If the assignee can no longer be assigned (left the workspace), the copy is created unassigned. Subtask copies are created in their own project's first column and linked to the new parent with a `subtask` relation.
 
 New task numbers come from the existing `claim-task-numbers` path, so the copy gets the project's next number (e.g. CNT-5).
 
@@ -74,9 +74,9 @@ After creation, publish the normal `task.created` events so the board, websocket
 ### Web UI (apps/web)
 
 - New `task-repeat-popover.tsx` and a "Repeat" row in `task-properties-sidebar.tsx` directly under Due date, following the existing popover pattern.
-- Popover fields: frequency (Daily / Weekly / Monthly / Yearly), "Every [N]", weekday toggles (weekly), monthly choice (on day X / on the first–fourth or last weekday, prefilled from the due date), a "Next: <date>" preview, "Stop repeating", and Save.
+- Popover fields: frequency (Daily / Weekly / Monthly / Yearly), "Every [N]", weekday toggles (weekly), monthly choice (on day X / on the first–fourth or last weekday, prefilled from the due date), "Stop repeating", and Save. "Next: <date>" shows the server-computed next due date for the saved rule (returned by GET/PUT), so date logic lives only in the API.
 - Row label summarises the rule, e.g. "Weekly on Mon, Thu"; "Doesn't repeat" when unset.
-- Small repeat icon on board cards and list rows for tasks with a rule.
+- Small repeat icon on board cards for tasks with a rule. The board fetches one list of recurring task IDs per project (`GET /task-recurrence/project/{projectId}`) instead of adding a field to the board task query, which keeps upstream's board query untouched. It is refreshed on the existing `TASK_CREATED` websocket message.
 - New i18n keys added to `en-US.json`; other locales fall back to English (run `i18n:check:fix` as the repo requires).
 - Fetch/mutation hooks follow the existing `hooks/queries` and `hooks/mutations` patterns.
 
@@ -101,5 +101,5 @@ After creation, publish the normal `task.created` events so the board, websocket
 
 - Fixed-schedule mode (copies appearing whether or not the previous one is done).
 - End conditions (repeat until date / N times).
-- Upstreaming the feature to usekaneo (possible later; the design keeps it self-contained).
+- Contributing this to usekaneo/kaneo. The feature lives only in the soniaginzb/kaneo fork: no pull requests, pushes or issues to upstream. The `upstream` remote is fetch-only (push URL disabled) and `gh` defaults to the fork.
 - Recurrence in imports/exports, the MCP server, or the public API docs beyond the new routes' OpenAPI entries.
