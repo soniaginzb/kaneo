@@ -1038,6 +1038,26 @@ export const taskRelationTable = pgTable(
   ],
 );
 
+export const taskRecurrenceTable = pgTable("task_recurrence", {
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  taskId: text("task_id")
+    .notNull()
+    .unique()
+    .references(() => taskTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  rrule: text("rrule").notNull(),
+  timeZone: text("time_zone").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 export const apikeyTable = pgTable(
   "apikey",
   {
