@@ -65,12 +65,15 @@ export default function MyTaskRow({
           {statusName(task, project, t)}
         </span>
         <span
-          className="hidden shrink-0 sm:inline-flex"
+          className="hidden w-3 shrink-0 justify-center sm:inline-flex"
           title={t(`tasks:priority.${task.priority}`)}
         >
           {getPriorityIcon(task.priority)}
         </span>
-        <DueLabel task={task} now={now} />
+        {/* Fixed slot so rows without a due date keep their columns aligned. */}
+        <span className="w-14 shrink-0 text-right">
+          <DueLabel task={task} now={now} />
+        </span>
         <span className="hidden w-5 shrink-0 sm:block">
           {task.assignee && <AssigneeAvatar assignee={task.assignee} />}
         </span>

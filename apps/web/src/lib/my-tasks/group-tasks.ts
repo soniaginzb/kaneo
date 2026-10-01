@@ -60,7 +60,12 @@ function groupByStatus(tasks: MyTask[], projects: MyTaskProject[]) {
     }
   }
 
+  // Every column gets a group, even an empty one, so a board can drop into it.
   const groups = new Map<string, TaskGroup>();
+  for (const [slug, column] of info) {
+    if (slug === BACKLOG_STATUS) continue;
+    groups.set(slug, { key: slug, name: column.name, tasks: [] });
+  }
   for (const task of tasks) {
     let group = groups.get(task.status);
     if (!group) {

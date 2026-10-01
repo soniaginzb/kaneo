@@ -1,7 +1,8 @@
 import {
   DndContext,
   type DragEndEvent,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -26,18 +27,22 @@ export default function MyTasksBoard({
 }: MyTasksViewProps & { onDrop: (task: MyTask, group: TaskGroup) => void }) {
   const { t } = useTranslation();
   const dragEnabled = isDragEnabled(groupBy);
-  // A short move turns a press into a drag; a click still opens the task.
+  // Same sensors as the project board: a short move turns a press into a
+  // drag, so a click still opens the task and a touch still scrolls.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
   );
   const projectById = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
     [projects],
   );
   const columns =
-    groupBy === "dueDate" || groupBy === "priority"
-      ? groups
-      : groups.filter((group) => group.tasks.length > 0);
+    groupBy === "project" || groupBy === "none"
+      ? groups.filter((group) => group.tasks.length > 0)
+      : groups;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const group = columns.find((column) => column.key === event.over?.id);

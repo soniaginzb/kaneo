@@ -18,14 +18,23 @@ vi.mock("@/hooks/use-project-websocket", () => ({
 class FakeSocket {
   static instances: FakeSocket[] = [];
   onmessage: ((event: { data: string }) => void) | null = null;
+  onopen: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  readyState = 0;
   closed = false;
+  sent: string[] = [];
   constructor(public url: string) {
     FakeSocket.instances.push(this);
   }
   close() {
     this.closed = true;
   }
+  // What the page sends to the server.
   send(message: string) {
+    this.sent.push(message);
+  }
+  // What the server pushes to the page.
+  receive(message: string) {
     this.onmessage?.({ data: message });
   }
 }
@@ -61,8 +70,8 @@ describe("useMyTasksLiveUpdates", () => {
       "ws://test/p2",
     ]);
 
-    FakeSocket.instances[0]?.send(JSON.stringify({ type: "TASK_UPDATED" }));
-    FakeSocket.instances[1]?.send(JSON.stringify({ type: "TASK_CREATED" }));
+    FakeSocket.instances[0]?.receive(JSON.stringify({ type: "TASK_UPDATED" }));
+    FakeSocket.instances[1]?.receive(JSON.stringify({ type: "TASK_CREATED" }));
     vi.advanceTimersByTime(300);
 
     expect(invalidate).toHaveBeenCalledTimes(1);
@@ -76,10 +85,40 @@ describe("useMyTasksLiveUpdates", () => {
 
   it("ignores pongs and frames that are not JSON", () => {
     const { invalidate } = setup(["p1"]);
-    FakeSocket.instances[0]?.send(JSON.stringify({ type: "pong" }));
-    FakeSocket.instances[0]?.send("hello");
+    FakeSocket.instances[0]?.receive(JSON.stringify({ type: "pong" }));
+    FakeSocket.instances[0]?.receive("hello");
     vi.advanceTimersByTime(300);
     expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it("reconnects a dropped socket and refreshes once it is back", () => {
+    const { invalidate, unmount } = setup(["p1"]);
+    const first = FakeSocket.instances[0];
+    first?.onclose?.();
+    expect(FakeSocket.instances).toHaveLength(1);
+
+    vi.advanceTimersByTime(1000);
+    expect(FakeSocket.instances).toHaveLength(2);
+    expect(FakeSocket.instances[1]?.url).toBe("ws://test/p1");
+
+    FakeSocket.instances[1]?.onopen?.();
+    vi.advanceTimersByTime(300);
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["my-tasks", "ws-1"],
+    });
+
+    unmount();
+    FakeSocket.instances[1]?.onclose?.();
+    vi.advanceTimersByTime(60_000);
+    expect(FakeSocket.instances).toHaveLength(2);
+  });
+
+  it("sends a keepalive ping every 30 seconds", () => {
+    setup(["p1"]);
+    const socket = FakeSocket.instances[0];
+    if (socket) socket.readyState = 1;
+    vi.advanceTimersByTime(30_000);
+    expect(socket?.sent).toEqual(['{"type":"ping"}']);
   });
 
   it("refreshes after any successful change made in this tab", async () => {

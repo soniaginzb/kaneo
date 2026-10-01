@@ -48,6 +48,15 @@ describe("MyTasksBoard", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows every status column so cards can be dropped into empty ones", () => {
+    renderBoard([makeTask()], "status");
+    expect(
+      screen
+        .getAllByRole("region")
+        .map((region) => region.getAttribute("aria-label")),
+    ).toEqual(["To Do", "In Progress", "Done"]);
+  });
+
   it("shows only project columns that have tasks", () => {
     renderBoard([makeTask({ projectId: "p1" })], "project");
     expect(

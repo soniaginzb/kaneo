@@ -112,6 +112,20 @@ describe("groupMyTasks", () => {
     ).toEqual(["p1"]);
   });
 
+  it("lists every column's status, even with no tasks, so boards have drop targets", () => {
+    const groups = groupMyTasks(
+      [makeTask({ id: "todo", status: "to-do", projectId: "p1" })],
+      "status",
+      options,
+    );
+    expect(summary(groups)).toEqual([
+      ["to-do", ["todo"]],
+      ["drafting", []],
+      ["in-progress", []],
+      ["done", []],
+    ]);
+  });
+
   it("merges same-slug statuses across projects, Backlog first", () => {
     const groups = groupMyTasks(
       [
