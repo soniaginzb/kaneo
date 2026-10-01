@@ -1895,7 +1895,8 @@
 			"members": "Members",
 			"invitations": "Invitations",
 			"more": "More",
-			"backToBoard": "Back to board"
+			"backToBoard": "Back to board",
+			"myTasks": "My tasks"
 		},
 		"projectList": {
 			"viewProject": "View Project",
@@ -2654,6 +2655,76 @@
 			"whenDay": "day {{day}}",
 			"whenLastDay": "the last day",
 			"whenWeekday": "the {{ordinal}} {{weekday}}"
+		},
+		"myTasks": {
+			"title": "My tasks",
+			"searchPlaceholder": "Search my tasks",
+			"view": {
+				"list": "List",
+				"board": "Board"
+			},
+			"groupBy": {
+				"label": "Group by",
+				"dueDate": "Due date",
+				"project": "Project",
+				"priority": "Priority",
+				"status": "Status",
+				"none": "None"
+			},
+			"sort": {
+				"label": "Sort",
+				"dueDate": "Due date",
+				"priority": "Priority",
+				"project": "Project",
+				"createdAt": "Created",
+				"title": "Title",
+				"asc": "Ascending",
+				"desc": "Descending"
+			},
+			"filter": {
+				"button": "Filter",
+				"assignee": "Assignee",
+				"project": "Project",
+				"priority": "Priority",
+				"due": "Due",
+				"label": "Label",
+				"completed": "Completed",
+				"remove": "Remove filter {{name}}"
+			},
+			"assignee": {
+				"me": "Me",
+				"unassigned": "Unassigned"
+			},
+			"due": {
+				"overdue": "Overdue",
+				"today": "Today",
+				"thisWeek": "This week",
+				"nextWeek": "Next week",
+				"later": "Later",
+				"noDate": "No date",
+				"completed": "Completed"
+			},
+			"completed": {
+				"hide": "Hide",
+				"7d": "Last 7 days",
+				"30d": "Last 30 days",
+				"all": "All"
+			},
+			"backlog": "Backlog",
+			"allTasks": "All tasks",
+			"complete": "Mark complete",
+			"reopen": "Mark incomplete",
+			"noDoneColumn": "This project has no Done column",
+			"missingColumn": "{{project}} has no \"{{column}}\" column",
+			"updateFailed": "Couldn't update the task",
+			"loadFailed": "Couldn't load your tasks",
+			"emptyTitle": "Nothing on your plate",
+			"emptyDescription": "Tasks assigned to you, or to no one, show up here.",
+			"hiddenByFilters_one": "{{count}} task hidden by filters",
+			"hiddenByFilters_other": "{{count}} tasks hidden by filters",
+			"clearFilters": "Clear filters",
+			"truncated": "Showing the first 2,000 tasks. Narrow the Completed filter to see the rest.",
+			"subtaskOf": "↳ {{title}}"
 		}
 	},
 	"invitations": {

@@ -7652,6 +7652,9 @@
 						},
 						"backToBoard": {
 							"type": "string"
+						},
+						"myTasks": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7660,7 +7663,8 @@
 						"members",
 						"invitations",
 						"more",
-						"backToBoard"
+						"backToBoard",
+						"myTasks"
 					]
 				},
 				"projectList": {
@@ -10895,6 +10899,292 @@
 						"whenLastDay",
 						"whenWeekday"
 					]
+				},
+				"myTasks": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"searchPlaceholder": {
+							"type": "string"
+						},
+						"view": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"list": {
+									"type": "string"
+								},
+								"board": {
+									"type": "string"
+								}
+							},
+							"required": ["list", "board"]
+						},
+						"groupBy": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"dueDate": {
+									"type": "string"
+								},
+								"project": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"status": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"label",
+								"dueDate",
+								"project",
+								"priority",
+								"status",
+								"none"
+							]
+						},
+						"sort": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"dueDate": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"project": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"asc": {
+									"type": "string"
+								},
+								"desc": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"label",
+								"dueDate",
+								"priority",
+								"project",
+								"createdAt",
+								"title",
+								"asc",
+								"desc"
+							]
+						},
+						"filter": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"type": "string"
+								},
+								"assignee": {
+									"type": "string"
+								},
+								"project": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"due": {
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								},
+								"completed": {
+									"type": "string"
+								},
+								"remove": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"button",
+								"assignee",
+								"project",
+								"priority",
+								"due",
+								"label",
+								"completed",
+								"remove"
+							]
+						},
+						"assignee": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"me": {
+									"type": "string"
+								},
+								"unassigned": {
+									"type": "string"
+								}
+							},
+							"required": ["me", "unassigned"]
+						},
+						"due": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"overdue": {
+									"type": "string"
+								},
+								"today": {
+									"type": "string"
+								},
+								"thisWeek": {
+									"type": "string"
+								},
+								"nextWeek": {
+									"type": "string"
+								},
+								"later": {
+									"type": "string"
+								},
+								"noDate": {
+									"type": "string"
+								},
+								"completed": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"overdue",
+								"today",
+								"thisWeek",
+								"nextWeek",
+								"later",
+								"noDate",
+								"completed"
+							]
+						},
+						"completed": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"hide": {
+									"type": "string"
+								},
+								"7d": {
+									"type": "string"
+								},
+								"30d": {
+									"type": "string"
+								},
+								"all": {
+									"type": "string"
+								}
+							},
+							"required": ["hide", "7d", "30d", "all"]
+						},
+						"backlog": {
+							"type": "string"
+						},
+						"allTasks": {
+							"type": "string"
+						},
+						"complete": {
+							"type": "string"
+						},
+						"reopen": {
+							"type": "string"
+						},
+						"noDoneColumn": {
+							"type": "string"
+						},
+						"missingColumn": {
+							"type": "string"
+						},
+						"updateFailed": {
+							"type": "string"
+						},
+						"loadFailed": {
+							"type": "string"
+						},
+						"emptyTitle": {
+							"type": "string"
+						},
+						"emptyDescription": {
+							"type": "string"
+						},
+						"hiddenByFilters_one": {
+							"type": "string"
+						},
+						"hiddenByFilters_zero": {
+							"type": "string"
+						},
+						"hiddenByFilters_two": {
+							"type": "string"
+						},
+						"hiddenByFilters_few": {
+							"type": "string"
+						},
+						"hiddenByFilters_many": {
+							"type": "string"
+						},
+						"hiddenByFilters_other": {
+							"type": "string"
+						},
+						"clearFilters": {
+							"type": "string"
+						},
+						"truncated": {
+							"type": "string"
+						},
+						"subtaskOf": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"searchPlaceholder",
+						"view",
+						"groupBy",
+						"sort",
+						"filter",
+						"assignee",
+						"due",
+						"completed",
+						"backlog",
+						"allTasks",
+						"complete",
+						"reopen",
+						"noDoneColumn",
+						"missingColumn",
+						"updateFailed",
+						"loadFailed",
+						"emptyTitle",
+						"emptyDescription",
+						"clearFilters",
+						"truncated",
+						"subtaskOf"
+					]
 				}
 			},
 			"required": [
@@ -10938,7 +11228,8 @@
 				"descriptionLoading",
 				"descriptionLoadError",
 				"board",
-				"repeat"
+				"repeat",
+				"myTasks"
 			]
 		},
 		"invitations": {

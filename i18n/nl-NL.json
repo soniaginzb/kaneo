@@ -1895,7 +1895,8 @@
 			"members": "Leden",
 			"invitations": "Uitnodigingen",
 			"more": "Meer",
-			"backToBoard": "Terug naar bord"
+			"backToBoard": "Terug naar bord",
+			"myTasks": "My tasks"
 		},
 		"projectList": {
 			"viewProject": "Project bekijken",
@@ -2654,6 +2655,76 @@
 			"whenLastDay": "the last day",
 			"whenWeekday": "the {{ordinal}} {{weekday}}",
 			"yearly": "Yearly"
+		},
+		"myTasks": {
+			"allTasks": "All tasks",
+			"assignee": {
+				"me": "Me",
+				"unassigned": "Unassigned"
+			},
+			"backlog": "Backlog",
+			"clearFilters": "Clear filters",
+			"complete": "Mark complete",
+			"completed": {
+				"30d": "Last 30 days",
+				"7d": "Last 7 days",
+				"all": "All",
+				"hide": "Hide"
+			},
+			"due": {
+				"completed": "Completed",
+				"later": "Later",
+				"nextWeek": "Next week",
+				"noDate": "No date",
+				"overdue": "Overdue",
+				"thisWeek": "This week",
+				"today": "Today"
+			},
+			"emptyDescription": "Tasks assigned to you, or to no one, show up here.",
+			"emptyTitle": "Nothing on your plate",
+			"filter": {
+				"assignee": "Assignee",
+				"button": "Filter",
+				"completed": "Completed",
+				"due": "Due",
+				"label": "Label",
+				"priority": "Priority",
+				"project": "Project",
+				"remove": "Remove filter {{name}}"
+			},
+			"groupBy": {
+				"dueDate": "Due date",
+				"label": "Group by",
+				"none": "None",
+				"priority": "Priority",
+				"project": "Project",
+				"status": "Status"
+			},
+			"hiddenByFilters_one": "{{count}} task hidden by filters",
+			"hiddenByFilters_other": "{{count}} tasks hidden by filters",
+			"loadFailed": "Couldn't load your tasks",
+			"missingColumn": "{{project}} has no \"{{column}}\" column",
+			"noDoneColumn": "This project has no Done column",
+			"reopen": "Mark incomplete",
+			"searchPlaceholder": "Search my tasks",
+			"sort": {
+				"asc": "Ascending",
+				"createdAt": "Created",
+				"desc": "Descending",
+				"dueDate": "Due date",
+				"label": "Sort",
+				"priority": "Priority",
+				"project": "Project",
+				"title": "Title"
+			},
+			"subtaskOf": "↳ {{title}}",
+			"title": "My tasks",
+			"truncated": "Showing the first 2,000 tasks. Narrow the Completed filter to see the rest.",
+			"updateFailed": "Couldn't update the task",
+			"view": {
+				"board": "Board",
+				"list": "List"
+			}
 		}
 	},
 	"invitations": {
