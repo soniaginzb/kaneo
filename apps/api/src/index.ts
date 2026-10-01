@@ -65,6 +65,7 @@ import { boardSchema, descriptionPageSchema } from "./task/response";
 import { descriptionPageQuery, listTasksQuery } from "./task/schema";
 import taskRelation from "./task-relation";
 import taskRecurrence from "./task-recurrence";
+import myTasks from "./my-tasks";
 import telegramIntegration from "./telegram-integration";
 import timeEntry from "./time-entry";
 import user from "./user";
@@ -772,6 +773,7 @@ export function createApp() {
   );
   const taskRelationApi = api.route("/task-relation", taskRelation);
   const taskRecurrenceApi = api.route("/task-recurrence", taskRecurrence);
+  const myTasksApi = api.route("/my-tasks", myTasks);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const invitationApi = api.route("/invitation", invitation);
@@ -916,6 +918,7 @@ export function createApp() {
     taskApi,
     taskRelationApi,
     taskRecurrenceApi,
+    myTasksApi,
     telegramIntegrationApi,
     timeEntryApi,
     userApi,
@@ -1047,6 +1050,7 @@ const {
   taskApi,
   taskRelationApi,
   taskRecurrenceApi,
+  myTasksApi,
   telegramIntegrationApi,
   timeEntryApi,
   userApi,
@@ -1091,6 +1095,7 @@ export type AppType =
   | typeof telegramIntegrationApi
   | typeof taskRelationApi
   | typeof taskRecurrenceApi
+  | typeof myTasksApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof invitationApi

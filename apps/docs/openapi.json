@@ -3470,6 +3470,231 @@
           "taskIds"
         ]
       },
+      "MyTasks": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyTask"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyTasksProject"
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when more than 2000 tasks matched and the rest were left out."
+          }
+        },
+        "required": [
+          "tasks",
+          "projects",
+          "truncated"
+        ]
+      },
+      "MyTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Column slug, or planned."
+          },
+          "priority": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "assignee": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "image": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "image"
+            ]
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "color"
+              ]
+            }
+          },
+          "parent": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "description": "The parent task when this is a subtask."
+          },
+          "isRecurring": {
+            "type": "boolean"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Time of the latest status change for completed tasks (falls back to the last edit)."
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "status",
+          "priority",
+          "startDate",
+          "dueDate",
+          "createdAt",
+          "projectId",
+          "assignee",
+          "labels",
+          "parent",
+          "isRecurring",
+          "completed",
+          "completedAt"
+        ]
+      },
+      "MyTasksProject": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "position": {
+            "type": "number"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "number"
+                },
+                "isFinal": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "slug",
+                "position",
+                "isFinal"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "icon",
+          "position",
+          "columns"
+        ]
+      },
       "CreatedExternalLink": {
         "type": "object",
         "properties": {
@@ -16680,6 +16905,68 @@
           },
           "403": {
             "description": "No access to the project's workspace",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/my-tasks/{workspaceId}": {
+      "get": {
+        "operationId": "getMyTasks",
+        "tags": [
+          "My Tasks"
+        ],
+        "summary": "List my tasks",
+        "description": "Tasks in the workspace's active projects that are assigned to the caller or unassigned, with each project's columns. Archived tasks are left out.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hide",
+                "7d",
+                "30d",
+                "all"
+              ],
+              "default": "hide",
+              "description": "Which completed tasks to include: hide (none), 7d / 30d (completed in the last 7 or 30 days), or all."
+            },
+            "required": false,
+            "description": "Which completed tasks to include: hide (none), 7d / 30d (completed in the last 7 or 30 days), or all.",
+            "name": "completed",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyTasks"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "Not a member of the workspace",
             "content": {
               "text/plain": {
                 "schema": {
