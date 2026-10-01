@@ -1,6 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import db, { schema } from "../../apps/api/src/database";
+import {
+  eventContext,
+  publishEvent,
+  subscribeToEvent,
+} from "../../apps/api/src/events";
 import { createApp } from "../../apps/api/src/index";
 import { spawnNextOccurrence } from "../../apps/api/src/task-recurrence/spawn-next-occurrence";
 import { mockAuthenticatedSession } from "./helpers/auth";
@@ -191,6 +196,33 @@ describe("API integration: spawning recurring tasks", () => {
     expect(rules).toEqual([
       expect.objectContaining({ taskId: result?.taskId }),
     ]);
+  });
+
+  it("announces the new copies to every open board, including the completing tab", async () => {
+    const { member, project, task } = await seedRecurring();
+    const initiators: Array<string | undefined> = [];
+    await subscribeToEvent<{ projectId: string; initiatorId?: string }>(
+      "task.created",
+      async (data) => {
+        if (data.projectId === project.id) initiators.push(data.initiatorId);
+      },
+    );
+
+    // The status route runs inside the completing tab's event context; the
+    // websocket layer skips that tab for events carrying its initiatorId.
+    await eventContext.run({ initiatorId: "completing-tab" }, () =>
+      publishEvent("task.status_changed", {
+        taskId: task.id,
+        projectId: project.id,
+        userId: member.user.id,
+      }),
+    );
+
+    await vi.waitFor(() => expect(initiators).toHaveLength(2), {
+      timeout: 10_000,
+      interval: 100,
+    });
+    expect(initiators).toEqual([undefined, undefined]);
   });
 
   it("creates an unassigned copy when the assignee left the workspace", async () => {
