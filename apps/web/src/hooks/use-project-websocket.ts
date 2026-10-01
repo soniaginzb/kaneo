@@ -273,9 +273,10 @@ export function useProjectWebSocket(projectId: string) {
             return;
           }
           if (message.type === "TASK_CREATED") {
-            // A completed repeating task hands its rule to the new copy.
+            // A completed repeating task hands its rule to the new copy, so
+            // both the board's list and the old task's own rule are stale.
             void queryClient.invalidateQueries({
-              queryKey: ["task-recurrence", "project", projectId],
+              queryKey: ["task-recurrence"],
             });
           }
           if (

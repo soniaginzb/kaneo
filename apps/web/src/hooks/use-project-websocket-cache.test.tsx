@@ -150,6 +150,16 @@ describe("board realtime races", () => {
       queryKey: ["tasks", "p"],
     });
   });
+
+  it("refreshes every repeat rule view when a task is created", () => {
+    renderHook(() => useProjectWebSocket("p"));
+    Socket.current.message("TASK_CREATED", { taskId: "copy" });
+    // Covers the board's recurring-task list and an open completed task whose
+    // rule just moved to the new copy.
+    expect(mocks.client.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["task-recurrence"],
+    });
+  });
 });
 
 it("reconciles the initial handshake after active pagination completes", async () => {
