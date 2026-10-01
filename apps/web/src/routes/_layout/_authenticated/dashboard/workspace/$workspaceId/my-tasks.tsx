@@ -11,6 +11,7 @@ import PageTitle from "@/components/page-title";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import useMyTasks from "@/hooks/queries/my-tasks/use-my-tasks";
+import { useDropDeletedProjectFilters } from "@/hooks/use-drop-deleted-project-filters";
 import { useMyTasksActions } from "@/hooks/use-my-tasks-actions";
 import { useMyTasksLiveUpdates } from "@/hooks/use-my-tasks-live-updates";
 import { useMyTasksPreferences } from "@/hooks/use-my-tasks-preferences";
@@ -19,6 +20,7 @@ import { authClient } from "@/lib/auth-client";
 import { filterMyTasks, labelOptionsFrom } from "@/lib/my-tasks/filter-tasks";
 import { groupLabel } from "@/lib/my-tasks/group-label";
 import { groupMyTasks, type TaskGroup } from "@/lib/my-tasks/group-tasks";
+import { myTasksPageState } from "@/lib/my-tasks/page-state";
 import { pruneFilters } from "@/lib/my-tasks/preferences";
 import { sortMyTasks } from "@/lib/my-tasks/sort-my-tasks";
 import {
@@ -75,9 +77,10 @@ function RouteComponent() {
   }
 
   const showCompleted = prefs.completed !== "hide";
+  useDropDeletedProjectFilters(prefs, data?.projects, updatePrefs);
   const filters = useMemo(
-    () => pruneFilters(prefs.filters, projects, tasks),
-    [prefs.filters, projects, tasks],
+    () => pruneFilters(prefs.filters, projects),
+    [prefs.filters, projects],
   );
   const labelOptions = useMemo(() => labelOptionsFrom(tasks), [tasks]);
 
@@ -140,6 +143,13 @@ function RouteComponent() {
   const handleDrop = (task: MyTask, group: TaskGroup) =>
     actions.drop(task, group.key, groupLabel(prefs.groupBy, group, t));
 
+  const pageState = myTasksPageState({
+    isLoading,
+    isError,
+    hasData: data !== undefined,
+    visibleCount: visible.length,
+  });
+
   const viewProps = {
     groups,
     groupBy: prefs.groupBy,
@@ -174,17 +184,17 @@ function RouteComponent() {
             {t("tasks:myTasks.truncated")}
           </p>
         )}
-        {isLoading ? (
+        {pageState === "loading" ? (
           <div className="flex flex-col gap-2">
             {SKELETON_ROWS.map((row) => (
               <Skeleton key={row} className="h-9 w-full" />
             ))}
           </div>
-        ) : isError ? (
+        ) : pageState === "error" ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {t("tasks:myTasks.loadFailed")}
           </p>
-        ) : visible.length === 0 ? (
+        ) : pageState === "empty" ? (
           <MyTasksEmpty
             hiddenCount={hiddenCount}
             onClearFilters={clearFilters}

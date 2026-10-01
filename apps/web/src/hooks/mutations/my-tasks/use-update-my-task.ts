@@ -15,6 +15,7 @@ function useUpdateMyTask(workspaceId: string) {
   const key = myTasksKey(workspaceId);
 
   return useMutation({
+    mutationKey: key,
     mutationFn: async (change: MyTaskChange) => {
       if (change.status !== undefined) {
         await updateTaskStatus(change.taskId, { status: change.status });
@@ -39,7 +40,11 @@ function useUpdateMyTask(workspaceId: string) {
       }
     },
     onSettled: (_data, _error, change) => {
-      void queryClient.invalidateQueries({ queryKey: key });
+      // With several changes in flight, only the last one refetches the list,
+      // or the refetch would undo the others' on-screen updates.
+      if (queryClient.isMutating({ mutationKey: key }) === 1) {
+        void queryClient.invalidateQueries({ queryKey: key });
+      }
       void queryClient.invalidateQueries({
         queryKey: ["tasks", change.projectId],
       });

@@ -66,6 +66,21 @@ describe("MyTasksBoard", () => {
     ).toEqual(["Content"]);
   });
 
+  it("shows a floating preview of the card while it is dragged", async () => {
+    renderBoard([makeTask({ title: "Write post" })], "status");
+    const card = screen.getByRole("button", { name: /Write post/ });
+
+    fireEvent.mouseDown(card, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseMove(document, { clientX: 60, clientY: 10 });
+
+    expect(screen.getByTestId("my-task-drag-preview")).toHaveTextContent(
+      "Write post",
+    );
+    fireEvent.mouseUp(document, { clientX: 60, clientY: 10 });
+    // dnd-kit removes its post-drag click blocker 50 ms after the drop.
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  });
+
   it("opens a card", () => {
     const task = makeTask({ title: "Write post" });
     const { onOpen } = renderBoard([task], "none");

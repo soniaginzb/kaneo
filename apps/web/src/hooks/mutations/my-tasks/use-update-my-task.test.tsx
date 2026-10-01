@@ -61,6 +61,42 @@ describe("useUpdateMyTask", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 
+  it("does not refetch the list while another change is still saving", async () => {
+    let finishFirst: () => void = () => {};
+    let finishSecond: () => void = () => {};
+    mocks.updateTaskStatus
+      .mockReturnValueOnce(
+        new Promise<void>((done) => {
+          finishFirst = done;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise<void>((done) => {
+          finishSecond = done;
+        }),
+      );
+    const { client, result } = setup();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    const myTasksRefetches = () =>
+      invalidate.mock.calls.filter(
+        ([filters]) => filters?.queryKey?.[0] === "my-tasks",
+      ).length;
+
+    act(() => {
+      result.current.mutate({ taskId: "t1", projectId: "p1", status: "done" });
+      result.current.mutate({ taskId: "t1", projectId: "p1", status: "to-do" });
+    });
+    await act(async () => {
+      finishFirst();
+    });
+    expect(myTasksRefetches()).toBe(0);
+
+    await act(async () => {
+      finishSecond();
+    });
+    await waitFor(() => expect(myTasksRefetches()).toBe(1));
+  });
+
   it("rolls the change back when the save fails", async () => {
     let reject: (error: Error) => void = () => {};
     mocks.updatePriority.mockReturnValue(

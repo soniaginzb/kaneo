@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { normalizePreferences, pruneFilters } from "./preferences";
-import { makeProject, makeTask } from "./test-fixtures";
+import { makeProject } from "./test-fixtures";
 import {
   DEFAULT_FILTERS,
   DEFAULT_PREFERENCES,
@@ -61,7 +61,9 @@ describe("normalizePreferences", () => {
 });
 
 describe("pruneFilters", () => {
-  it("drops projects and labels that no longer exist", () => {
+  it("drops deleted projects but keeps label filters", () => {
+    // A label filter whose last task was just completed must keep filtering
+    // (showing "hidden by filters"), not silently turn into "everything".
     expect(
       pruneFilters(
         {
@@ -70,8 +72,11 @@ describe("pruneFilters", () => {
           labels: ["client", "old"],
         },
         [makeProject({ id: "p1" })],
-        [makeTask({ labels: [{ id: "l", name: "Client", color: "#f00" }] })],
       ),
-    ).toEqual({ ...DEFAULT_FILTERS, projects: ["p1"], labels: ["client"] });
+    ).toEqual({
+      ...DEFAULT_FILTERS,
+      projects: ["p1"],
+      labels: ["client", "old"],
+    });
   });
 });

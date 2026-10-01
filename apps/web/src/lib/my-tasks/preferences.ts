@@ -1,11 +1,9 @@
-import { labelKey } from "./filter-tasks";
 import {
   ASSIGNEE_FILTERS,
   COMPLETED_WINDOWS,
   DEFAULT_PREFERENCES,
   DUE_FILTERS,
   GROUP_BYS,
-  type MyTask,
   type MyTaskProject,
   type MyTasksFilters,
   type MyTasksPreferences,
@@ -56,19 +54,16 @@ export function normalizePreferences(raw: unknown): MyTasksPreferences {
   };
 }
 
-// Saved filters can point at projects or labels deleted since; ignore those.
+// Saved project filters can point at projects deleted since; drop those.
+// Label filters stay: a label with no matching task right now (e.g. its last
+// task was just completed) must keep filtering, not show everything.
 export function pruneFilters(
   filters: MyTasksFilters,
   projects: MyTaskProject[],
-  tasks: MyTask[],
 ): MyTasksFilters {
   const projectIds = new Set(projects.map((project) => project.id));
-  const labelKeys = new Set(
-    tasks.flatMap((task) => task.labels.map((label) => labelKey(label.name))),
-  );
   return {
     ...filters,
     projects: filters.projects.filter((id) => projectIds.has(id)),
-    labels: filters.labels.filter((key) => labelKeys.has(key)),
   };
 }

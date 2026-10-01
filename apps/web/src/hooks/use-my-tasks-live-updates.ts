@@ -28,6 +28,11 @@ export function useMyTasksLiveUpdates(
       if (refreshTimer) clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
         refreshTimer = null;
+        // This page's own pending save refetches when it settles; refetching
+        // now would undo its on-screen update.
+        if (queryClient.isMutating({ mutationKey: myTasksKey(workspaceId) })) {
+          return;
+        }
         void queryClient.invalidateQueries({
           queryKey: myTasksKey(workspaceId),
         });

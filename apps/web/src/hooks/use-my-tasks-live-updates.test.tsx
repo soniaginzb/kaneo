@@ -121,6 +121,19 @@ describe("useMyTasksLiveUpdates", () => {
     expect(socket?.sent).toEqual(['{"type":"ping"}']);
   });
 
+  it("leaves the refresh to this page's own save while it is pending", () => {
+    const { client, invalidate } = setup(["p1"]);
+    const pending = client.getMutationCache().build(client, {
+      mutationKey: ["my-tasks", "ws-1"],
+      mutationFn: () => new Promise(() => {}),
+    });
+    void pending.execute(undefined);
+
+    FakeSocket.instances[0]?.receive(JSON.stringify({ type: "TASK_UPDATED" }));
+    vi.advanceTimersByTime(300);
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
   it("refreshes after any successful change made in this tab", async () => {
     const { client, invalidate } = setup([]);
     await client
