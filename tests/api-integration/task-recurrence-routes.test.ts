@@ -119,7 +119,7 @@ describe("API integration: task recurrence routes", () => {
     ).toBe(400);
   });
 
-  it("blocks viewers and outsiders from changing rules", async () => {
+  it("blocks viewers and hides tasks from outsiders", async () => {
     const viewer = await seed("viewer");
     mockAuthenticatedSession(viewer.member.user);
     expect(
@@ -150,6 +150,6 @@ describe("API integration: task recurrence routes", () => {
           timeZone: "UTC",
         })
       ).status,
-    ).toBe(403);
+    ).toBe(404);
   });
 });

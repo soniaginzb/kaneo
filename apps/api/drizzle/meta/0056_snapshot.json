@@ -1,5 +1,5 @@
 {
-  "id": "892614e2-1536-471d-8d1f-54654b878d3c",
+  "id": "4979d93d-0739-4b09-8ce2-43eb47c915c5",
   "prevId": "34e70d06-88aa-4af7-bb27-8b57ff0819a7",
   "version": "7",
   "dialect": "postgresql",
@@ -1452,6 +1452,32 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.data_migration": {
+      "name": "data_migration",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2952,79 +2978,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "token"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.task_recurrence": {
-      "name": "task_recurrence",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "task_id": {
-          "name": "task_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rrule": {
-          "name": "rrule",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "time_zone": {
-          "name": "time_zone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "task_recurrence_task_id_task_id_fk": {
-          "name": "task_recurrence_task_id_task_id_fk",
-          "tableFrom": "task_recurrence",
-          "tableTo": "task",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "task_recurrence_task_id_unique": {
-          "name": "task_recurrence_task_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "task_id"
           ]
         }
       },

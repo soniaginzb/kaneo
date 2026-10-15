@@ -1,9 +1,10 @@
+import { useRestoreTaskFocus } from "@/components/project/task-view-keys/use-restore-task-focus";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Calendar, CalendarClock, CalendarX } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { Calendar, CalendarClock, CalendarX, Trash2Icon } from "lucide-react";
+import { type CSSProperties, useMemo, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskProgressBadges } from "@/components/task/task-progress-badges";
 import { TaskPullRequests } from "@/components/task/task-pull-requests";
@@ -35,8 +36,11 @@ import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
+import { CardFieldList } from "@/components/custom-fields/card-field-list";
+import { useTaskCardFields } from "@/components/custom-fields/use-task-card-fields";
 import { TaskLabels } from "../kanban-board/task-labels";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
+import { EASE_OUT_CSS } from "@/lib/motion";
 
 type TaskRowProps = {
   task: Task;
@@ -53,7 +57,10 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({
+    id: task.id,
+    transition: { duration: 200, easing: EASE_OUT_CSS },
+  });
 
   const { project } = useProjectStore();
   const taskIsCompleted = isTaskCompleted(task.status, project?.columns);
@@ -65,11 +72,27 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
     showLabels,
     showTaskNumbers,
   } = useUserPreferencesStore();
-  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
+  const cardFields = useTaskCardFields(task.projectId, task.id);
+  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState<
+    boolean | null
+  >(null);
+  const [hasOpenedMenu, setHasOpenedMenu] = useState(false);
   const { mutateAsync: deleteTask } = useDeleteTask();
-  const { toggleSelection, isSelected, isFocused } = useBulkSelectionStore();
-  const isTaskSelected = isSelected(task.id);
-  const isTaskFocused = isFocused(task.id);
+  const toggleSelection = useBulkSelectionStore(
+    (state) => state.toggleSelection,
+  );
+  const selectRange = useBulkSelectionStore((state) => state.selectRange);
+  const setFocusedTask = useBulkSelectionStore((state) => state.setFocusedTask);
+  useRestoreTaskFocus(task.id, useBulkSelectionStore);
+  const setSelectionAnchor = useBulkSelectionStore(
+    (state) => state.setSelectionAnchor,
+  );
+  const isTaskSelected = useBulkSelectionStore((state) =>
+    state.selectedTaskIds.has(task.id),
+  );
+  const isTaskFocused = useBulkSelectionStore(
+    (state) => state.focusedTaskId === task.id,
+  );
 
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     workspace?.id ?? "",
@@ -83,7 +106,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
 
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || "transform 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+    transition: transition || `transform 200ms ${EASE_OUT_CSS}`,
     touchAction: isDragging ? "none" : "auto",
   };
 
@@ -91,12 +114,19 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
     if (!project || !task) return;
     if (e.defaultPrevented) return;
 
+    if (e.shiftKey) {
+      e.preventDefault();
+      selectRange(task.id);
+      return;
+    }
+
     if (e.metaKey || e.ctrlKey) {
       e.preventDefault();
       toggleSelection(task.id);
       return;
     }
 
+    setSelectionAnchor(task.id);
     const currentParams = new URLSearchParams(window.location.search);
     const currentTaskId = currentParams.get("taskId");
 
@@ -113,16 +143,18 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleClick(e as unknown as React.MouseEvent);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented || e.target !== e.currentTarget) return;
+    if (e.key === "Enter" && e.shiftKey) {
+      e.preventDefault();
+      selectRange(task.id);
     }
   };
 
   const handleDeleteTask = async () => {
     try {
       await deleteTask(task.id);
-      toast.success(t("tasks:delete.success"));
+      toast.success(t("tasks:delete.success"), { icon: Trash2Icon });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t("tasks:delete.error"),
@@ -134,6 +166,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
     <div
       ref={setNodeRef}
       style={style}
+      data-kaneo-sortable
       className={cn(
         "border-b border-border/50 transition-colors duration-150",
         isDragging && "opacity-50",
@@ -142,18 +175,25 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
         isTaskFocused && "ring-2 ring-inset ring-ring/50",
       )}
     >
-      <ContextMenu>
+      <ContextMenu
+        onOpenChange={(open) => {
+          if (open) setHasOpenedMenu(true);
+        }}
+      >
         <ContextMenuTrigger asChild>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- false positive for onClick and onKeyDown */}
           <div
             onClick={handleClick}
-            onKeyDown={handleKeyDown}
             className={cn(
-              "group relative flex items-center gap-3 px-4 py-1.5 transition-colors cursor-pointer",
+              "group relative flex cursor-pointer items-center gap-3 px-4 py-1.5 outline-none transition-colors",
               isTaskSelected ? "bg-accent/45" : "hover:bg-accent/60",
             )}
+            data-task-id={task.id}
+            data-shortcut-surface
             {...attributes}
             {...listeners}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setFocusedTask(task.id)}
           >
             {showPriority && (
               <div className="flex-shrink-0 first:[&_svg]:h-4 first:[&_svg]:w-4">
@@ -173,6 +213,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                 </span>
                 <div className="flex items-center gap-1">
                   <TaskProgressBadges task={task} />
+                  <CardFieldList fields={cardFields} max={3} />
                   {showLabels && <TaskLabels labels={task.labels ?? []} />}
 
                   <TaskPullRequests
@@ -226,49 +267,52 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
           </div>
         </ContextMenuTrigger>
 
-        {project && workspace && (
+        {hasOpenedMenu && project && workspace && (
           <TaskCardContextMenuContent
             task={task}
             taskCardContext={{
               projectId: project.id,
               worskpaceId: workspace.id,
+              workspaceSlug: workspace.slug,
             }}
             onDeleteClick={() => setIsDeleteTaskModalOpen(true)}
           />
         )}
       </ContextMenu>
 
-      <AlertDialog
-        open={isDeleteTaskModalOpen}
-        onOpenChange={setIsDeleteTaskModalOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("tasks:delete.title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("tasks:delete.description")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogClose render={<Button variant="outline" size="sm" />}>
-              {t("common:actions.cancel")}
-            </AlertDialogClose>
-            <AlertDialogClose
-              render={
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteTask}
-                />
-              }
-            >
-              {t("tasks:delete.action")}
-            </AlertDialogClose>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {isDeleteTaskModalOpen !== null && (
+        <AlertDialog
+          open={isDeleteTaskModalOpen}
+          onOpenChange={setIsDeleteTaskModalOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("tasks:delete.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("tasks:delete.description")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogClose render={<Button variant="outline" size="sm" />}>
+                {t("common:actions.cancel")}
+              </AlertDialogClose>
+              <AlertDialogClose
+                render={
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteTask}
+                  />
+                }
+              >
+                {t("tasks:delete.action")}
+              </AlertDialogClose>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
 
-export default TaskRow;
+export default memo(TaskRow);

@@ -14,4 +14,15 @@ describe("MagicLinkEmail", () => {
     expect(html).toContain("Kaneo にサインイン");
     expect(html).toContain("Kaneo セキュリティメール");
   });
+
+  it("renders Traditional Chinese copy for a zh-TW locale", async () => {
+    const html = await render(
+      createElement(MagicLinkEmail, {
+        magicLink: "https://kaneo.example/auth",
+        locale: "zh-TW",
+      }),
+    );
+    expect(html).toContain("登入 Kaneo");
+    expect(html).toContain("Kaneo 安全性通知");
+  });
 });

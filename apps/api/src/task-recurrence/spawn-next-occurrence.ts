@@ -26,10 +26,14 @@ async function firstColumnSlug(projectId: string) {
   return column.slug;
 }
 
-async function assignableOrNull(userId: string | null, workspaceId: string) {
+async function assignableOrNull(
+  userId: string | null,
+  workspaceId: string,
+  projectId: string,
+) {
   if (!userId) return null;
   try {
-    await assertAssignableUser(userId, workspaceId);
+    await assertAssignableUser(userId, workspaceId, projectId);
     return userId;
   } catch {
     return null;
@@ -96,7 +100,11 @@ export async function spawnNextOccurrence({
         status: await firstColumnSlug(previous.projectId),
         dueDate,
         startDate,
-        userId: await assignableOrNull(previous.userId, source.workspaceId),
+        userId: await assignableOrNull(
+          previous.userId,
+          source.workspaceId,
+          previous.projectId,
+        ),
         // Moving the rule in the copy's transaction makes a repeat completion
         // (or a concurrent event) find nothing to move and roll back its copy.
         inTransaction: async (tx, task) => {
@@ -153,7 +161,11 @@ export async function spawnNextOccurrence({
           status: await firstColumnSlug(subtask.projectId),
           dueDate: shifted(subtask.dueDate, shiftMs),
           startDate: shifted(subtask.startDate, shiftMs),
-          userId: await assignableOrNull(subtask.userId, source.workspaceId),
+          userId: await assignableOrNull(
+            subtask.userId,
+            source.workspaceId,
+            subtask.projectId,
+          ),
           parents: [{ taskId: copy.id, projectId: copy.projectId }],
         },
       });
